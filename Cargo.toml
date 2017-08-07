@@ -1,0 +1,25 @@
+[package]
+name = "nessus"
+version = "0.1.0"
+description = "Nessus api client"
+authors = ["kpcyrd <git@rxv.cc>"]
+license = "LGPL-3.0"
+repository = "https://github.com/kpcyrd/nessus-rs"
+categories = ["api-bindings"]
+readme = "README.md"
+
+[badges]
+travis-ci = { repository = "kpcyrd/nessus-rs" }
+
+[dependencies]
+roadrunner = "0.1.1"
+hyper = "0.11"
+tokio-core = "0.1"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde-xml-rs = "0.2.0"
+log = "0.3"
+
+[dev-dependencies]
+env_logger = "0.4"
