@@ -101,13 +101,13 @@ pub struct ScanDetailsInfo {
     // pub acls
     pub edit_allowed: bool,
     pub status: String,
-    pub policy: String,
+    pub policy: Option<String>,
     #[serde(rename="pci-can-upload")]
     pub pci_can_upload: bool,
     pub hasaudittrail: bool,
     pub scan_start: u64,
     pub folder_id: u64,
-    pub targets: String,
+    pub targets: Option<String>,
     pub timestamp: u64,
     pub object_id: u64,
     pub scanner_name: String,

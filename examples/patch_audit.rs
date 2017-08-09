@@ -15,25 +15,27 @@ fn main() {
 
     let client = nessus::Client::new(host, token, secret);
 
+    println!("[*] starting scan: {:?}...", scan_id);
     let scan = client.launch_scan(scan_id).unwrap();
-    println!("launch_scan: {:?}", scan);
-
     scan.wait(&client, Duration::from_secs(60), Some(30)).unwrap();
 
+    println!("[*] scan finished, exporting...");
     let export = client.export_scan(scan_id).unwrap();
     export.wait(&client, Duration::from_secs(3), Some(40)).unwrap();
 
+    println!("[+] export finished");
     let export = export.download(&client).unwrap();
 
     println!("{:?}:", export.report.name);
     for host in export.report.report_hosts {
-        println!("\t{:?}:", host.name);
-        for prop in host.host_properties.tags {
-            println!("\t\t{:?}: {:?}", prop.name, prop.value);
-        }
-
-        for item in host.report_items {
-            println!("\t\t{:?}", item);
-        }
+        match host.patch_needed() {
+            Some(advice) => {
+                println!("\t{:?}:", host.name);
+                for item in advice {
+                    println!("\t\t{:?}", item);
+                }
+            },
+            None => (),
+        };
     }
 }

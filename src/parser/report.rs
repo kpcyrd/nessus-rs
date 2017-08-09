@@ -32,7 +32,7 @@ pub struct ReportItem {
     pub port: String,
     pub svc_name: String,
     pub protocol: String,
-    pub severity: String,
+    pub severity: String, // set to u64 after https://github.com/RReverser/serde-xml-rs/issues/25
     #[serde(rename="pluginID")]
     pub plugin_id: String,
     #[serde(rename="pluginName")]
