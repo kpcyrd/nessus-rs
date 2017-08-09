@@ -1,9 +1,9 @@
 use std::time::Duration;
-use std::thread::sleep;
 
 use Client;
 use Error;
 use parser;
+use Waitable;
 
 #[derive(Debug, Deserialize)]
 pub struct PolicyReponse {
@@ -24,6 +24,20 @@ pub struct Policy {
 pub struct ScanLaunchResponse {
     pub scan_uuid: String,
 
+    pub scan_id: Option<u64>, // added by nessus-rs
+}
+
+impl ScanLaunchResponse {
+    pub fn wait(&self, client: &Client, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
+        <ScanLaunchResponse as Waitable>::wait(self, client, interval, max_attempts)
+    }
+}
+
+impl Waitable for ScanLaunchResponse {
+    fn is_pending(&self, client: &Client) -> Result<bool, Error> {
+        let details = client.scan_details(self.scan_id.unwrap())?;
+        Ok(details.is_running())
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -142,33 +156,19 @@ pub struct ExportToken {
 }
 
 impl ExportToken {
-    pub fn is_ready(&self, client: &Client) -> Result<bool, Error> {
-        let status = client.export_status(self.scan_id.unwrap(), self.file)?;
-        Ok(status.is_ready())
-    }
-
-    pub fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<bool, Error> {
-        loop {
-            if self.is_ready(&client)? {
-                return Ok(true);
-            }
-
-            if let Some(ref mut left) = max_attempts {
-                if *left <= 0 {
-                    break;
-                }
-
-                *left -= 1;
-            }
-
-            sleep(interval);
-        }
-
-        return Ok(false);
+    pub fn wait(&self, client: &Client, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
+        <ExportToken as Waitable>::wait(self, client, interval, max_attempts)
     }
 
     pub fn download(&self, client: &Client) -> Result<parser::NessusClientDatav2, Error> {
         client.download_export(self.scan_id.unwrap(), self.file)
+    }
+}
+
+impl Waitable for ExportToken {
+    fn is_pending(&self, client: &Client) -> Result<bool, Error> {
+        let status = client.export_status(self.scan_id.unwrap(), self.file)?;
+        Ok(!status.is_ready())
     }
 }
 

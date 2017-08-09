@@ -8,6 +8,8 @@ extern crate serde_xml_rs;
 extern crate hyper;
 
 use std::collections::HashMap;
+use std::time::Duration;
+use std::thread::sleep;
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -101,7 +103,10 @@ impl Client {
     }
 
     pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse, Error> {
-        self.post_empty(&format!("/scans/{}/launch", id))
+        let mut launch: structs::ScanLaunchResponse = self.post_empty(&format!("/scans/{}/launch", id))?;
+
+        launch.scan_id = Some(id);
+        Ok(launch)
     }
 
     pub fn stop_scan(&self, id: u64) -> Result<(), Error> {
@@ -166,6 +171,30 @@ impl Client {
         let response = self.download_export_raw(scan_id, file_id)?;
         let report = parser::parse(response)?;
         Ok(report)
+    }
+}
+
+trait Waitable {
+    fn is_pending(&self, client: &Client) -> Result<bool, Error>;
+
+    fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<(), Error> {
+        loop {
+            if ! self.is_pending(&client)? {
+                return Ok(());
+            }
+
+            if let Some(ref mut left) = max_attempts {
+                if *left <= 0 {
+                    break;
+                }
+
+                *left -= 1;
+            }
+
+            sleep(interval);
+        }
+
+        return Err(Error::WaitTimeout);
     }
 }
 

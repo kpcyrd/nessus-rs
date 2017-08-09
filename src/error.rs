@@ -7,6 +7,7 @@ pub enum Error {
     Http(roadrunner::Error),
     Status(roadrunner::Response),
     Parser(parser::Error),
+    WaitTimeout,
 }
 
 impl From<roadrunner::Error> for Error {

@@ -3,7 +3,6 @@ extern crate env_logger;
 
 use std::env;
 use std::time::Duration;
-use std::thread::sleep;
 
 fn main() {
     env_logger::init().unwrap();
@@ -12,35 +11,18 @@ fn main() {
     let token = env::var("NESSUS_TOKEN").unwrap();
     let secret = env::var("NESSUS_SECRET").unwrap();
 
-    let scan: u64 = env::var("NESSUS_SCAN").unwrap().parse().unwrap();
+    let scan_id: u64 = env::var("NESSUS_SCAN").unwrap().parse().unwrap();
 
     let client = nessus::Client::new(host, token, secret);
 
-    let x = client.launch_scan(scan);
-    println!("launch_scan: {:?}", x);
+    let scan = client.launch_scan(scan_id).unwrap();
+    println!("launch_scan: {:?}", scan);
 
-    // TODO: make this nicer
-    for n in 0..100 {
-        let details = client.scan_details(scan).unwrap();
-        println!("details: {:?}", details);
+    scan.wait(&client, Duration::from_secs(60), Some(30)).unwrap();
 
-        if ! details.is_running() {
-            break;
-        }
+    let export = client.export_scan(scan_id).unwrap();
+    export.wait(&client, Duration::from_secs(3), Some(40)).unwrap();
 
-        sleep(Duration::from_secs(60));
-
-        if n == 99 {
-            panic!("timeout");
-        }
-    }
-
-    let x = client.export_scan(scan).unwrap();
-
-    if ! x.wait(&client, Duration::from_secs(3), Some(40)).unwrap() {
-        panic!("export timeout")
-    }
-
-    let y = x.download(&client);
-    println!("download: {:?}", y);
+    let report = export.download(&client);
+    println!("download: {:?}", report);
 }
