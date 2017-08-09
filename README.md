@@ -16,7 +16,7 @@ use std::time::Duration;
 
 fn main() {
     let scan_id = 31337;
-    let client = nessus::Client::new("https://nessus.example.com", "yourtoken", "secrettoken");
+    let client = nessus::Client::new("https://nessus.example.com", "yourtoken", "secrettoken").unwrap();
 
     let scan = client.launch_scan(scan_id).unwrap();
     scan.wait(&client, Duration::from_secs(60), Some(30)).unwrap();

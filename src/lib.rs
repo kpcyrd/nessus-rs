@@ -7,7 +7,7 @@
 //!
 //! fn main() {
 //!     let scan_id = 31337;
-//!     let client = nessus::Client::new("https://nessus.example.com", "yourtoken", "secrettoken");
+//!     let client = nessus::Client::new("https://nessus.example.com", "yourtoken", "secrettoken").unwrap();
 //!
 //!     let scan = client.launch_scan(scan_id).unwrap();
 //!     scan.wait(&client, Duration::from_secs(60), Some(30)).unwrap();
@@ -29,6 +29,7 @@ extern crate regex;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 extern crate hyper;
+extern crate url;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -37,6 +38,7 @@ use std::thread::sleep;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
+use url::Url;
 use roadrunner::RestClient;
 use roadrunner::RestClientMethods;
 
@@ -51,18 +53,18 @@ pub use error::Error;
 /// Nessus API client
 #[derive(Debug)]
 pub struct Client {
-    host: String,
+    host: Url,
     token: String,
     secret: String,
 }
 
 impl Client {
-    pub fn new<I: Into<String>>(host: I, token: I, secret: I) -> Client {
-        Client {
-            host: host.into(),
+    pub fn new<I: Into<String>>(host: &str, token: I, secret: I) -> Result<Client, url::ParseError> {
+        Ok(Client {
+            host: Url::parse(host)?,
             token: token.into(),
             secret: secret.into(),
-        }
+        })
     }
 
     fn deserialize<T: DeserializeOwned>(&self, response: roadrunner::Response) -> Result<T, Error> {
@@ -85,40 +87,39 @@ impl Client {
         }
     }
 
-    fn raw_get(&self, url: &str) -> Result<roadrunner::Response, Error> {
+    fn mkurl(&self, path: &str) -> Result<Url, Error> {
+        Ok(self.host.join(path)?)
+    }
+
+    fn raw_get(&self, path: &str) -> Result<roadrunner::Response, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
-        let response = RestClient::get(&format!("{}{}", self.host, url))
+        let response = RestClient::get(self.mkurl(path)?.as_str())
             .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
             .execute_on(&mut core)?;
 
         Client::assure_ok(response)
     }
 
-    fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
+    fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
+        let x = self.raw_get(path)?;
+        self.deserialize(x)
+    }
+
+    fn post_empty<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
-        let response = RestClient::get(&format!("{}{}", self.host, url))
+        let response = RestClient::post(self.mkurl(path)?.as_str())
             .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
             .execute_on(&mut core)?;
 
         self.deserialize(Client::assure_ok(response)?)
     }
 
-    fn post_empty<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
+    fn post<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
-        let response = RestClient::post(&format!("{}{}", self.host, url))
-            .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
-            .execute_on(&mut core)?;
-
-        self.deserialize(Client::assure_ok(response)?)
-    }
-
-    fn post<T: Serialize, R: DeserializeOwned>(&self, url: &str, msg: T) -> Result<R, Error> {
-        let mut core = tokio_core::reactor::Core::new().unwrap();
-
-        let response = RestClient::post(&format!("{}{}", self.host, url))
+        let response = RestClient::post(self.mkurl(path)?.as_str())
             .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
             .json_body_typed(&msg)
             .execute_on(&mut core)?;

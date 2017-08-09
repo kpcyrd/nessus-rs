@@ -11,7 +11,7 @@ fn main() {
     let secret = env::var("NESSUS_SECRET").unwrap();
 
 
-    let client = nessus::Client::new(host, token, secret);
+    let client = nessus::Client::new(&host, token, secret).unwrap();
 
     let x = client.list_policies();
     println!("list_policies: {:?}", x);

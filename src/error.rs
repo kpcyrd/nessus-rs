@@ -1,4 +1,5 @@
 use roadrunner;
+use url;
 use parser;
 
 /// A set of errors that can occur
@@ -7,6 +8,7 @@ pub enum Error {
     Http(roadrunner::Error),
     Status(roadrunner::Response),
     Parser(parser::Error),
+    Url(url::ParseError),
     WaitTimeout,
 }
 
@@ -19,5 +21,11 @@ impl From<roadrunner::Error> for Error {
 impl From<parser::Error> for Error {
     fn from(err: parser::Error) -> Error {
         Error::Parser(err)
+    }
+}
+
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Error {
+        Error::Url(err)
     }
 }

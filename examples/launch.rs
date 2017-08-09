@@ -13,7 +13,7 @@ fn main() {
 
     let scan_id: u64 = env::var("NESSUS_SCAN").unwrap().parse().unwrap();
 
-    let client = nessus::Client::new(host, token, secret);
+    let client = nessus::Client::new(&host, token, secret).unwrap();
 
     let scan = client.launch_scan(scan_id).unwrap();
     println!("launch_scan: {:?}", scan);
