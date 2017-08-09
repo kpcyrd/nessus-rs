@@ -1,3 +1,24 @@
+//! Nessus Vulnerability Scanner API client
+//!
+//! ```no_run
+//! extern crate nessus;
+//!
+//! use std::time::Duration;
+//!
+//! fn main() {
+//!     let scan_id = 31337;
+//!     let client = nessus::Client::new("https://nessus.example.com", "yourtoken", "secrettoken");
+//!
+//!     let scan = client.launch_scan(scan_id).unwrap();
+//!     scan.wait(&client, Duration::from_secs(60), Some(30)).unwrap();
+//!
+//!     let export = client.export_scan(scan_id).unwrap();
+//!     export.wait(&client, Duration::from_secs(3), Some(40)).unwrap();
+//!
+//!     let report = export.download(&client).unwrap();
+//!     println!("download: {:?}", report);
+//! }
+//! ```
 extern crate roadrunner;
 extern crate tokio_core;
 extern crate serde;
@@ -18,7 +39,9 @@ use roadrunner::RestClient;
 use roadrunner::RestClientMethods;
 
 mod error;
+/// Nessus reports parser module
 pub mod parser;
+/// Various structs
 pub mod structs;
 
 pub use error::Error;
@@ -32,11 +55,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(host: String, token: String, secret: String) -> Client {
+    pub fn new<I: Into<String>>(host: I, token: I, secret: I) -> Client {
         Client {
-            host,
-            token,
-            secret,
+            host: host.into(),
+            token: token.into(),
+            secret: secret.into(),
         }
     }
 
@@ -48,9 +71,12 @@ impl Client {
     }
 
     fn assure_ok(response: roadrunner::Response) -> Result<roadrunner::Response, Error> {
-        let status = response.status().clone();
+        let is_ok = {
+            let status = response.status();
+            *status == hyper::StatusCode::Ok || *status == hyper::StatusCode::Created
+        };
 
-        if status != hyper::StatusCode::Ok && status != hyper::StatusCode::Created {
+        if ! is_ok {
             Err(Error::Status(response))
         } else {
             Ok(response)
