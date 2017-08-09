@@ -51,12 +51,22 @@ impl PatchAdvice {
 impl report::ReportItem {
     pub fn patch_needed(&self) -> Option<Vec<PatchAdvice>> {
         lazy_static! {
-            static ref RE: Regex = Regex::new("Remote package installed : (?P<old>.*)\nShould be : (?P<new>.*)").unwrap();
+            static ref RE: Vec<Regex> = vec![
+                // debian
+                Regex::new("Remote package installed : (?P<old>.*)\nShould be : (?P<new>.*)").unwrap(),
+                // java
+                Regex::new("The following vulnerable instance of Java is installed on the\nremote host :\n\n  Path              : (?P<path>.*)\n  Installed version : (?P<old>.*)\n  Fixed version     : (?P<new>.*)").unwrap(),
+                // ubuntu
+                Regex::new("- Installed package : (?P<old>.*)\n    Fixed package     : (?P<new>.*)").unwrap(),
+            ];
         }
 
         match self.plugin_output {
             Some(ref output) => {
-                let advice: Vec<PatchAdvice> = RE.captures_iter(output).into_iter()
+                let advice: Vec<PatchAdvice> = RE.iter()
+                    .flat_map(|re| {
+                        re.captures_iter(output)
+                    })
                     .map(|caps| {
                         PatchAdvice {
                             old_version: caps["old"].to_owned(),
