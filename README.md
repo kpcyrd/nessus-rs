@@ -4,7 +4,7 @@ Nessus Vulnerability Scanner API client.
 
 ```toml
 [dependencies]
-nessus = "0.1"
+nessus = "0.2"
 ```
 
 ## Usage
