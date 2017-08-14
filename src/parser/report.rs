@@ -1,11 +1,11 @@
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Report {
     pub name: String,
     #[serde(rename="ReportHost", default)]
     pub report_hosts: Vec<ReportHost>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ReportHost {
     pub name: String,
     #[serde(rename="HostProperties")]
@@ -14,20 +14,20 @@ pub struct ReportHost {
     pub report_items: Vec<ReportItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct HostProperties {
     #[serde(rename="tag")]
     pub tags: Vec<Tag>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Tag {
     pub name: String,
     #[serde(rename="$value")]
     pub value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ReportItem {
     pub port: String,
     pub svc_name: String,

@@ -5,12 +5,12 @@ use Error;
 use parser;
 use Waitable;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PolicyReponse {
     pub templates: Vec<Policy>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Policy {
     pub desc: String,
     pub title: String,
@@ -20,7 +20,7 @@ pub struct Policy {
     pub cloud_only: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanLaunchResponse {
     pub scan_uuid: String,
 
@@ -40,14 +40,14 @@ impl Waitable for ScanLaunchResponse {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanListResponse {
     pub folders: Vec<Folder>,
     pub scans: Vec<Scan>,
     pub timestamp: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Folder {
     pub unread_count: Option<u32>,
     pub custom: u32,
@@ -58,7 +58,7 @@ pub struct Folder {
     pub id: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Scan {
     pub folder_id: u64,
     pub read: bool,
@@ -77,7 +77,7 @@ pub struct Scan {
     pub id: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanDetails {
     pub info: ScanDetailsInfo,
     pub hosts: Vec<ScanDetailsHost>,
@@ -96,7 +96,7 @@ impl ScanDetails {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanDetailsInfo {
     // pub acls
     pub edit_allowed: bool,
@@ -119,7 +119,7 @@ pub struct ScanDetailsInfo {
     pub control: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanDetailsHost {
     pub host_id: u64,
     pub host_index: u64,
@@ -137,7 +137,7 @@ pub struct ScanDetailsHost {
     pub score: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScanDetailsVulnerability {
     pub plugin_id: u64,
     pub plugin_name: String,
@@ -147,7 +147,7 @@ pub struct ScanDetailsVulnerability {
     pub severity_index: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ExportToken {
     pub file: u64,
     pub token: String,
@@ -172,7 +172,7 @@ impl Waitable for ExportToken {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ExportStatus {
     pub status: String,
 }

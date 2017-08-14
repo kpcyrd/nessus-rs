@@ -1,4 +1,4 @@
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Policy {
     #[serde(rename="Preferences")]
     pub preferences: Preferences,
@@ -8,7 +8,7 @@ pub struct Policy {
     pub individual_plugin_selection: IndividualPluginSelection,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Preferences {
     #[serde(rename="ServerPreferences")]
     pub server_preferences: ServerPreferences,
@@ -16,25 +16,25 @@ pub struct Preferences {
     pub plugins_preferences: PluginsPreferences,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ServerPreferences {
     #[serde(rename="preference")]
     pub preferences: Vec<ServerPreference>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ServerPreference {
     pub name: String,
     pub value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PluginsPreferences {
     #[serde(rename="item")]
     pub preferences: Vec<PluginPreference>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PluginPreference {
     #[serde(rename="pluginName")]
     pub plugin_name: String,
@@ -52,13 +52,13 @@ pub struct PluginPreference {
     pub selected_value: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct FamilySelection {
     #[serde(rename="FamilyItem")]
     pub family_items: Vec<FamilyItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct FamilyItem {
     #[serde(rename="FamilyName")]
     pub family_name: String,
@@ -66,13 +66,13 @@ pub struct FamilyItem {
     pub status: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct IndividualPluginSelection {
     #[serde(rename="PluginItem")]
     pub plugin_items: Vec<PluginItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct PluginItem {
     #[serde(rename="PluginId", with="u64")]
     pub plugin_id: u64,
