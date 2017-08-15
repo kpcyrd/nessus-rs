@@ -31,7 +31,7 @@ pub fn parse<I: Into<String>>(buffer: I) -> Result<NessusClientDatav2, Error> {
     Ok(report)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PatchAdvice {
     old_version: String,
     new_version: String,
