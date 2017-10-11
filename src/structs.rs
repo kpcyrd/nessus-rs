@@ -5,12 +5,12 @@ use Error;
 use parser;
 use Waitable;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PolicyReponse {
     pub templates: Vec<Policy>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Policy {
     pub desc: String,
     pub title: String,
@@ -20,7 +20,7 @@ pub struct Policy {
     pub cloud_only: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanLaunchResponse {
     pub scan_uuid: String,
 
@@ -40,14 +40,14 @@ impl Waitable for ScanLaunchResponse {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanListResponse {
     pub folders: Vec<Folder>,
     pub scans: Vec<Scan>,
     pub timestamp: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Folder {
     pub unread_count: Option<u32>,
     pub custom: u32,
@@ -58,7 +58,7 @@ pub struct Folder {
     pub id: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Scan {
     pub folder_id: u64,
     pub read: bool,
@@ -77,12 +77,16 @@ pub struct Scan {
     pub id: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanDetails {
     pub info: ScanDetailsInfo,
+    #[serde(default)]
     pub hosts: Vec<ScanDetailsHost>,
+    #[serde(default)]
     pub comphosts: Vec<ScanDetailsHost>,
+    #[serde(default)]
     pub vulnerabilities: Vec<ScanDetailsVulnerability>,
+    #[serde(default)]
     pub compliance: Vec<ScanDetailsVulnerability>,
 }
 
@@ -96,30 +100,30 @@ impl ScanDetails {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanDetailsInfo {
     // pub acls
-    pub edit_allowed: bool,
+    pub edit_allowed: Option<bool>,
     pub status: String,
     pub policy: Option<String>,
     #[serde(rename="pci-can-upload")]
-    pub pci_can_upload: bool,
-    pub hasaudittrail: bool,
-    pub scan_start: u64,
+    pub pci_can_upload: Option<bool>,
+    pub hasaudittrail: Option<bool>,
+    pub scan_start: Option<u64>,
     pub folder_id: u64,
     pub targets: Option<String>,
-    pub timestamp: u64,
+    pub timestamp: Option<u64>,
     pub object_id: u64,
     pub scanner_name: String,
-    pub haskb: bool,
-    pub uuid: String,
-    pub hostcount: u64,
+    pub haskb: Option<bool>,
+    pub uuid: Option<String>,
+    pub hostcount: Option<u64>,
     pub name: String,
     pub user_permissions: u64,
     pub control: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanDetailsHost {
     pub host_id: u64,
     pub host_index: u64,
@@ -137,7 +141,7 @@ pub struct ScanDetailsHost {
     pub score: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanDetailsVulnerability {
     pub plugin_id: u64,
     pub plugin_name: String,
@@ -147,7 +151,7 @@ pub struct ScanDetailsVulnerability {
     pub severity_index: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ExportToken {
     pub file: u64,
     pub token: String,
@@ -172,7 +176,7 @@ impl Waitable for ExportToken {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ExportStatus {
     pub status: String,
 }

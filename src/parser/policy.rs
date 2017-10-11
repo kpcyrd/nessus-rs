@@ -49,7 +49,7 @@ pub struct PluginPreference {
     #[serde(rename="preferenceValues")]
     pub preference_values: String,
     #[serde(rename="selectedValue")]
-    pub selected_value: String,
+    pub selected_value: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
