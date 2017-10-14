@@ -4,7 +4,7 @@ Nessus Vulnerability Scanner API client.
 
 ```toml
 [dependencies]
-nessus = "0.2"
+nessus = "0.4"
 ```
 
 ## Usage
@@ -30,6 +30,17 @@ fn main() {
 ```
 
 See `examples/`.
+
+## Why are there so many releases?
+
+nessus-rs is still being tested for production use and while there is some documentation from tenable.com, the response
+objects aren't sufficiently documented to deserialize them properly. While this library should work for you most of the
+time, there are edgecases which cause the deserialization to fail and require updates to the struct definition. One
+might argue those are 0.0.X updates, but since they are technically breaking changes to the library, they are
+released as 0.X.0 updates. If you experience `JsonError`s there's a good chance updating your nessus-rs dependency
+resolves those. Updating the dependency should be fairly safe and usually doesn't require updates on your code.
+
+If you work for tenable.com, please consider documenting which fields might be null or missing and file an issue.
 
 ## License
 
