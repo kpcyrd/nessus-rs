@@ -18,4 +18,9 @@ fn main() {
 
     let x = client.list_scans();
     println!("list_scans: {:?}", x);
+
+    for scan in x.unwrap().scans {
+        let y = client.scan_details(scan.id);
+        println!("scan {}: {:?}", scan.id, y);
+    }
 }

@@ -17,7 +17,7 @@ pub struct Policy {
     pub name: String,
     pub subscription_only: bool,
     pub uuid: String,
-    pub cloud_only: bool,
+    pub cloud_only: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -147,7 +147,7 @@ pub struct ScanDetailsVulnerability {
     pub plugin_name: String,
     pub plugin_family: String,
     pub count: u64,
-    pub vuln_index: u64,
+    pub vuln_index: Option<u64>,
     pub severity_index: u64,
 }
 
