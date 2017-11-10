@@ -203,7 +203,7 @@ impl Client {
     }
 }
 
-trait Waitable {
+pub trait Waitable {
     fn is_pending(&self, client: &Client) -> Result<bool, Error>;
 
     fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<(), Error> {
