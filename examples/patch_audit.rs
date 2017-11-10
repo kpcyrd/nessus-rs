@@ -7,11 +7,11 @@ use std::time::Duration;
 fn main() {
     env_logger::init().unwrap();
 
-    let host = env::var("NESSUS_HOST").unwrap();
-    let token = env::var("NESSUS_TOKEN").unwrap();
-    let secret = env::var("NESSUS_SECRET").unwrap();
+    let host = env::var("NESSUS_HOST").expect("couldn't find NESSUS_HOST");
+    let token = env::var("NESSUS_TOKEN").expect("couldn't find NESSUS_TOKEN");
+    let secret = env::var("NESSUS_SECRET").expect("couldn't find NESSUS_SECRET");
 
-    let scan_id: u64 = env::var("NESSUS_SCAN").unwrap().parse().unwrap();
+    let scan_id: u64 = env::var("NESSUS_SCAN").expect("couldn't find NESSUS_SCAN").parse().unwrap();
 
     let client = nessus::Client::new(&host, token, secret).unwrap();
 
