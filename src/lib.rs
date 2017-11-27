@@ -180,6 +180,11 @@ impl Client {
         Ok(scan)
     }
 
+    pub fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<(), Error> {
+        self.raw_delete(&format!("/scans/{}/history/{}", scan_id, history_id))?;
+        Ok(())
+    }
+
     pub fn delete_scan(&self, scan_id: u64) -> Result<(), Error> {
         self.raw_delete(&format!("/scans/{}", scan_id))?;
         Ok(())
