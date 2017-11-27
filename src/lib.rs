@@ -146,6 +146,17 @@ impl Client {
         self.deserialize(Client::assure_ok(response)?)
     }
 
+    #[inline]
+    fn raw_delete(&self, path: &str) -> Result<roadrunner::Response, Error> {
+        let mut core = tokio_core::reactor::Core::new().unwrap();
+
+        let response = RestClient::get(self.mkurl(path)?.as_str())
+            .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
+            .execute_on(&mut core)?;
+
+        Client::assure_ok(response)
+    }
+
     pub fn list_policies(&self) -> Result<structs::PolicyReponse, Error> {
         self.get("/editor/policy/templates")
     }
@@ -167,6 +178,11 @@ impl Client {
 
         let scan: structs::UpdateScanResponse = self.put(&format!("/scans/{}", scan_id), request)?;
         Ok(scan)
+    }
+
+    pub fn delete_scan(&self, scan_id: u64) -> Result<(), Error> {
+        self.raw_delete(&format!("/scans/{}", scan_id))?;
+        Ok(())
     }
 
     pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse, Error> {
