@@ -67,6 +67,7 @@ impl Client {
         })
     }
 
+    #[inline]
     fn deserialize<T: DeserializeOwned>(&self, response: roadrunner::Response) -> Result<T, Error> {
         info!("Response: {:?}", response);
 
@@ -74,6 +75,7 @@ impl Client {
         Ok(obj)
     }
 
+    #[inline]
     fn assure_ok(response: roadrunner::Response) -> Result<roadrunner::Response, Error> {
         let is_ok = {
             let status = response.status();
@@ -87,10 +89,12 @@ impl Client {
         }
     }
 
+    #[inline]
     fn mkurl(&self, path: &str) -> Result<Url, Error> {
         Ok(self.host.join(path)?)
     }
 
+    #[inline]
     fn raw_get(&self, path: &str) -> Result<roadrunner::Response, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
@@ -101,11 +105,13 @@ impl Client {
         Client::assure_ok(response)
     }
 
+    #[inline]
     fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
         let x = self.raw_get(path)?;
         self.deserialize(x)
     }
 
+    #[inline]
     fn post_empty<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
@@ -116,10 +122,23 @@ impl Client {
         self.deserialize(Client::assure_ok(response)?)
     }
 
+    #[inline]
     fn post<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R, Error> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::post(self.mkurl(path)?.as_str())
+            .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
+            .json_body_typed(&msg)
+            .execute_on(&mut core)?;
+
+        self.deserialize(Client::assure_ok(response)?)
+    }
+
+    #[inline]
+    fn put<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R, Error> {
+        let mut core = tokio_core::reactor::Core::new().unwrap();
+
+        let response = RestClient::put(self.mkurl(path)?.as_str())
             .header_append_raw("X-ApiKeys", format!("accessKey={}; secretKey={}", self.token, self.secret))
             .json_body_typed(&msg)
             .execute_on(&mut core)?;
@@ -137,6 +156,16 @@ impl Client {
             settings: settings,
         };
         let scan: structs::CreateScanResponse = self.post("/scans", request)?;
+        Ok(scan)
+    }
+
+    pub fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse, Error> {
+        let request = structs::UpdateScanRequest {
+            uuid: template_uuid,
+            settings: settings,
+        };
+
+        let scan: structs::UpdateScanResponse = self.put(&format!("/scans/{}", scan_id), request)?;
         Ok(scan)
     }
 
