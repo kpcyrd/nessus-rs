@@ -20,6 +20,51 @@ pub struct Policy {
     pub cloud_only: Option<bool>,
 }
 
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct CreateScanRequest {
+    pub uuid: String,
+    pub settings: ScanSettings,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct CreateScanResponse {
+    pub uuid: String,
+    // TODO: settings
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct ScanSettings {
+    /// The name of the scan
+    pub name: String,
+    /// The description of the scan
+    pub description: Option<String>,
+    /// The unique id of the policy to use
+    pub policy_id: Option<u32>,
+    /// The unique id of the destination folder for the scan
+    pub folder_id: Option<u32>,
+    /// The unique id of the scanner to use
+    pub scanner_id: Option<u32>,
+    /// If true, the schedule for the scan is enabled
+    pub enabled: bool,
+    /// When to launch the scan. (i.e. ON_DEMAND, DAILY, WEEKLY, MONTHLY, YEARLY)
+    pub launch: Option<String>,
+    /// The starting time and date for the scan (i.e. YYYYMMDDTHHMMSS)
+    pub starttime: Option<String>,
+    /// Expects a semi-colon delimited string comprised of three values. The frequency (FREQ=ONCE or DAILY or WEEKLY or MONTHLY or YEARLY), the interval (INTERVAL=1 or 2 or 3 ... x), and the days of the week (BYDAY=SU,MO,TU,WE,TH,FR,SA). To create a scan that runs every three weeks on Monday Wednesday and Friday the string would be 'FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,WE,FR'
+    pub rrules: Option<String>,
+    /// The timezone for the scan schedule
+    pub timezone: Option<String>,
+    /// The list of targets to scan
+    pub text_targets: String,
+    /// The name of a file containing the list of targets to scan
+    pub file_targets: Option<String>,
+    /// A comma separated list of accounts who will recieve the email summary report
+    pub emails: Option<String>,
+    // /// An array containing permissions to apply to the scan
+    // pub acls: Option<Vec<String>>>, // type isn't documented
+}
+
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct ScanLaunchResponse {
     pub scan_uuid: String,

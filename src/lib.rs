@@ -131,6 +131,15 @@ impl Client {
         self.get("/editor/policy/templates")
     }
 
+    pub fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse, Error> {
+        let request = structs::CreateScanRequest {
+            uuid: template_uuid.into(),
+            settings: settings,
+        };
+        let scan: structs::CreateScanResponse = self.post("/scans", request)?;
+        Ok(scan)
+    }
+
     pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse, Error> {
         let mut launch: structs::ScanLaunchResponse = self.post_empty(&format!("/scans/{}/launch", id))?;
 
