@@ -1,4 +1,11 @@
-# nessus-rs [![Build Status](https://travis-ci.org/kpcyrd/nessus-rs.svg?branch=master)](https://travis-ci.org/kpcyrd/nessus-rs) [![Crates.io](https://img.shields.io/crates/v/nessus.svg)](https://crates.io/crates/nessus)
+# nessus-rs [![Build Status][travis-img]][travis] [![crates.io][crates-img]][crates] [![docs.rs][docs-img]][docs]
+
+[travis-img]:   https://travis-ci.org/kpcyrd/nessus-rs.svg?branch=master
+[travis]:       https://travis-ci.org/kpcyrd/nessus-rs
+[crates-img]:   https://img.shields.io/crates/v/nessus.svg
+[crates]:       https://crates.io/crates/nessus
+[docs-img]:     https://docs.rs/nessus/badge.svg
+[docs]:         https://docs.rs/nessus
 
 Nessus Vulnerability Scanner API client.
 
