@@ -4,6 +4,7 @@ use Client;
 use Error;
 use parser;
 use Waitable;
+use VulnScanner;
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PolicyReponse {

@@ -82,6 +82,40 @@ pub struct Client {
     secret: String,
 }
 
+pub trait VulnScanner {
+    fn list_policies(&self) -> Result<structs::PolicyReponse>;
+
+    fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse>;
+
+    fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse>;
+
+    fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<()>;
+
+    fn delete_scan(&self, scan_id: u64) -> Result<()>;
+
+    fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse>;
+
+    fn stop_scan(&self, id: u64) -> Result<()>;
+
+    fn pause_scan(&self, id: u64) -> Result<()>;
+
+    fn resume_scan(&self, id: u64) -> Result<()>;
+
+    fn scan_details(&self, id: u64) -> Result<structs::ScanDetails>;
+
+    fn list_scans(&self) -> Result<structs::ScanListResponse>;
+
+    fn list_scan_folder(&self, id: u64) -> Result<structs::ScanListResponse>;
+
+    fn export_scan(&self, scan_id: u64) -> Result<structs::ExportToken>;
+
+    fn export_status(&self, scan_id: u64, file_id: u64) -> Result<structs::ExportStatus>;
+
+    fn download_export_raw(&self, scan_id: u64, file_id: u64) -> Result<String>;
+
+    fn download_export(&self, scan_id: u64, file_id: u64) -> Result<parser::NessusClientDatav2>;
+}
+
 impl Client {
     pub fn new<I: Into<String>>(host: &str, token: I, secret: I) -> Result<Client> {
         Ok(Client {
@@ -180,12 +214,14 @@ impl Client {
 
         Client::assure_ok(response)
     }
+}
 
-    pub fn list_policies(&self) -> Result<structs::PolicyReponse> {
+impl VulnScanner for Client {
+    fn list_policies(&self) -> Result<structs::PolicyReponse> {
         self.get("/editor/policy/templates")
     }
 
-    pub fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse> {
+    fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse> {
         let request = structs::CreateScanRequest {
             uuid: template_uuid.into(),
             settings: settings,
@@ -194,7 +230,7 @@ impl Client {
         Ok(scan)
     }
 
-    pub fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse> {
+    fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse> {
         let request = structs::UpdateScanRequest {
             uuid: template_uuid,
             settings: settings,
@@ -204,44 +240,44 @@ impl Client {
         Ok(scan)
     }
 
-    pub fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<()> {
+    fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<()> {
         self.raw_delete(&format!("/scans/{}/history/{}", scan_id, history_id))?;
         Ok(())
     }
 
-    pub fn delete_scan(&self, scan_id: u64) -> Result<()> {
+    fn delete_scan(&self, scan_id: u64) -> Result<()> {
         self.raw_delete(&format!("/scans/{}", scan_id))?;
         Ok(())
     }
 
-    pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse> {
+    fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse> {
         let mut launch: structs::ScanLaunchResponse = self.post_empty(&format!("/scans/{}/launch", id))?;
 
         launch.scan_id = Some(id);
         Ok(launch)
     }
 
-    pub fn stop_scan(&self, id: u64) -> Result<()> {
+    fn stop_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/stop", id))
     }
 
-    pub fn pause_scan(&self, id: u64) -> Result<()> {
+    fn pause_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/pause", id))
     }
 
-    pub fn resume_scan(&self, id: u64) -> Result<()> {
+    fn resume_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/resume", id))
     }
 
-    pub fn scan_details(&self, id: u64) -> Result<structs::ScanDetails> {
+    fn scan_details(&self, id: u64) -> Result<structs::ScanDetails> {
         self.get(&format!("/scans/{}", id))
     }
 
-    pub fn list_scans(&self) -> Result<structs::ScanListResponse> {
+    fn list_scans(&self) -> Result<structs::ScanListResponse> {
         self.get("/scans")
     }
 
-    pub fn list_scan_folder(&self, id: u64) -> Result<structs::ScanListResponse> {
+    fn list_scan_folder(&self, id: u64) -> Result<structs::ScanListResponse> {
         // TODO: use ?folder_id=
         let response = self.list_scans()?;
 
@@ -259,7 +295,7 @@ impl Client {
         })
     }
 
-    pub fn export_scan(&self, scan_id: u64) -> Result<structs::ExportToken> {
+    fn export_scan(&self, scan_id: u64) -> Result<structs::ExportToken> {
         let mut x = HashMap::new();
         x.insert("format", "nessus");
 
@@ -268,18 +304,18 @@ impl Client {
         Ok(token)
     }
 
-    pub fn export_status(&self, scan_id: u64, file_id: u64) -> Result<structs::ExportStatus> {
+    fn export_status(&self, scan_id: u64, file_id: u64) -> Result<structs::ExportStatus> {
         self.get(&format!("/scans/{}/export/{}/status", scan_id, file_id))
     }
 
-    pub fn download_export_raw(&self, scan_id: u64, file_id: u64) -> Result<String> {
+    fn download_export_raw(&self, scan_id: u64, file_id: u64) -> Result<String> {
         let response = self.raw_get(&format!("/scans/{}/export/{}/download", scan_id, file_id))?;
         let content = response.content();
         let string = content.as_ref_string().to_owned();
         Ok(string)
     }
 
-    pub fn download_export(&self, scan_id: u64, file_id: u64) -> Result<parser::NessusClientDatav2> {
+    fn download_export(&self, scan_id: u64, file_id: u64) -> Result<parser::NessusClientDatav2> {
         let response = self.download_export_raw(scan_id, file_id)?;
         let report = parser::parse(response)?;
         Ok(report)
