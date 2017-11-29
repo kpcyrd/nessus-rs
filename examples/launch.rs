@@ -3,6 +3,7 @@ extern crate env_logger;
 
 use std::env;
 use std::time::Duration;
+use nessus::VulnScanner;
 
 fn main() {
     env_logger::init().unwrap();

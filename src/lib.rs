@@ -4,6 +4,7 @@
 //! extern crate nessus;
 //!
 //! use std::time::Duration;
+//! use nessus::VulnScanner;
 //!
 //! fn main() {
 //!     let scan_id = 31337;
@@ -322,10 +323,10 @@ impl VulnScanner for Client {
     }
 }
 
-pub trait Waitable {
-    fn is_pending(&self, client: &Client) -> Result<bool>;
+pub trait Waitable<V: VulnScanner> {
+    fn is_pending(&self, client: &V) -> Result<bool>;
 
-    fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<()> {
+    fn wait(&self, client: &V, interval: Duration, mut max_attempts: Option<u64>) -> Result<()> {
         loop {
             if ! self.is_pending(&client)? {
                 return Ok(());

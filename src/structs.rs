@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use Client;
 use Error;
 use parser;
 use Waitable;
@@ -148,13 +147,13 @@ pub struct ScanLaunchResponse {
 }
 
 impl ScanLaunchResponse {
-    pub fn wait(&self, client: &Client, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
-        <ScanLaunchResponse as Waitable>::wait(self, client, interval, max_attempts)
+    pub fn wait<V: VulnScanner>(&self, client: &V, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
+        <ScanLaunchResponse as Waitable<V>>::wait(self, client, interval, max_attempts)
     }
 }
 
-impl Waitable for ScanLaunchResponse {
-    fn is_pending(&self, client: &Client) -> Result<bool, Error> {
+impl<V: VulnScanner> Waitable<V> for ScanLaunchResponse {
+    fn is_pending(&self, client: &V) -> Result<bool, Error> {
         let details = client.scan_details(self.scan_id.unwrap())?;
         Ok(details.is_running())
     }
@@ -280,17 +279,17 @@ pub struct ExportToken {
 }
 
 impl ExportToken {
-    pub fn wait(&self, client: &Client, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
-        <ExportToken as Waitable>::wait(self, client, interval, max_attempts)
+    pub fn wait<V: VulnScanner>(&self, client: &V, interval: Duration, max_attempts: Option<u64>) -> Result<(), Error> {
+        <ExportToken as Waitable<V>>::wait(self, client, interval, max_attempts)
     }
 
-    pub fn download(&self, client: &Client) -> Result<parser::NessusClientDatav2, Error> {
+    pub fn download<V: VulnScanner>(&self, client: &V) -> Result<parser::NessusClientDatav2, Error> {
         client.download_export(self.scan_id.unwrap(), self.file)
     }
 }
 
-impl Waitable for ExportToken {
-    fn is_pending(&self, client: &Client) -> Result<bool, Error> {
+impl<V: VulnScanner> Waitable<V> for ExportToken {
+    fn is_pending(&self, client: &V) -> Result<bool, Error> {
         let status = client.export_status(self.scan_id.unwrap(), self.file)?;
         Ok(!status.is_ready())
     }

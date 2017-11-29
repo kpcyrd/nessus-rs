@@ -2,6 +2,7 @@ extern crate nessus;
 extern crate env_logger;
 
 use std::env;
+use nessus::VulnScanner;
 
 fn main() {
     env_logger::init().unwrap();
