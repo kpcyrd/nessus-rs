@@ -28,22 +28,49 @@ pub struct CreateScanRequest {
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct CreateScanResponse {
-    pub uuid: String,
-    // TODO: settings
+    pub scan: CreateScanResponseData,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct CreateScanResponseData {
+    pub creation_date: u64,
+    pub custom_targets: String,
+    pub default_permisssions: u64,
+    pub description: String,
+    pub emails: String,
+    pub id: u64,
+    pub last_modification_date: u64,
+    pub name: String,
+    pub notification_filter_type: String,
+    pub notification_filters: String,
+    pub owner: String,
+    pub owner_id: u64,
+    pub policy_id: u64,
+    pub enabled: bool,
+    pub rrules: String,
+    pub scanner_id: u64,
+    pub shared: u64,
+    pub starttime: String,
+    pub tag_id: u64,
+    pub timezone: String,
+    #[serde(rename="type")]
+    pub scan_type: String,
+    pub user_permissions: u64,
+    pub uuid: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScanSettings {
     /// The name of the scan
     pub name: String,
     /// The description of the scan
     pub description: Option<String>,
     /// The unique id of the policy to use
-    pub policy_id: Option<u32>,
+    pub policy_id: Option<u64>,
     /// The unique id of the destination folder for the scan
-    pub folder_id: Option<u32>,
+    pub folder_id: Option<u64>,
     /// The unique id of the scanner to use
-    pub scanner_id: Option<u32>,
+    pub scanner_id: Option<u64>,
     /// If true, the schedule for the scan is enabled
     pub enabled: bool,
     /// When to launch the scan. (i.e. ON_DEMAND, DAILY, WEEKLY, MONTHLY, YEARLY)
@@ -76,18 +103,18 @@ pub struct UpdateScanResponse {
     // TODO: settings
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
 pub struct ScanSettingsUpdate {
     /// The name of the scan
     pub name: Option<String>,
     /// The description of the scan
     pub description: Option<String>,
     /// The unique id of the policy to use
-    pub policy_id: Option<u32>,
+    pub policy_id: Option<u64>,
     /// The unique id of the destination folder for the scan
-    pub folder_id: Option<u32>,
+    pub folder_id: Option<u64>,
     /// The unique id of the scanner to use
-    pub scanner_id: Option<u32>,
+    pub scanner_id: Option<u64>,
     /// If true, the schedule for the scan is enabled
     pub enabled: bool,
     /// When to launch the scan. (i.e. ON_DEMAND, DAILY, WEEKLY, MONTHLY, YEARLY)
@@ -99,9 +126,9 @@ pub struct ScanSettingsUpdate {
     /// The timezone for the scan schedule
     pub timezone: Option<String>,
     // /// An array of target group IDs to scan
-    // pub target_groups: Option<Vec<u32>>,
+    // pub target_groups: Option<Vec<u64>>,
     // /// An array An array of agent group IDs to scan. Required if the scan is an agent scan
-    // pub agent_groups: Option<Vec<u32>>,
+    // pub agent_groups: Option<Vec<u64>>,
     /// The list of targets to scan
     pub text_targets: String,
     /// The name of a file containing the list of targets to scan
@@ -141,9 +168,9 @@ pub struct ScanListResponse {
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Folder {
-    pub unread_count: Option<u32>,
-    pub custom: u32,
-    pub default_tag: u32,
+    pub unread_count: Option<u64>,
+    pub custom: u64,
+    pub default_tag: u64,
     #[serde(rename="type")]
     pub folder_type: String,
     pub name: String,

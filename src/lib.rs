@@ -30,6 +30,7 @@ extern crate regex;
 #[macro_use] extern crate log;
 extern crate hyper;
 extern crate url;
+#[macro_use] extern crate error_chain;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -42,13 +43,36 @@ use url::Url;
 use roadrunner::RestClient;
 use roadrunner::RestClientMethods;
 
-mod error;
 /// Nessus reports parser module
 pub mod parser;
 /// Various structs
 pub mod structs;
 
-pub use error::Error;
+mod errors {
+    use parser;
+    use url;
+    use roadrunner::{self, Response};
+
+    error_chain! {
+        errors {
+            Status(r: Response) {
+                description("invalid status code")
+                display("server sent error: '{:?}'", r)
+            }
+            WaitTimeout {
+                description("wait timeout occured")
+                display("task took too long to finish")
+            }
+        }
+
+        foreign_links {
+            RoadRunner(roadrunner::Error);
+            Url(url::ParseError);
+            Parser(parser::Error);
+        }
+    }
+}
+pub use errors::*;
 
 /// Nessus API client
 #[derive(Debug)]
@@ -59,7 +83,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new<I: Into<String>>(host: &str, token: I, secret: I) -> Result<Client, url::ParseError> {
+    pub fn new<I: Into<String>>(host: &str, token: I, secret: I) -> Result<Client> {
         Ok(Client {
             host: Url::parse(host)?,
             token: token.into(),
@@ -68,7 +92,7 @@ impl Client {
     }
 
     #[inline]
-    fn deserialize<T: DeserializeOwned>(&self, response: roadrunner::Response) -> Result<T, Error> {
+    fn deserialize<T: DeserializeOwned>(&self, response: roadrunner::Response) -> Result<T> {
         info!("Response: {:?}", response);
 
         let obj = response.content().as_typed()?;
@@ -76,26 +100,26 @@ impl Client {
     }
 
     #[inline]
-    fn assure_ok(response: roadrunner::Response) -> Result<roadrunner::Response, Error> {
+    fn assure_ok(response: roadrunner::Response) -> Result<roadrunner::Response> {
         let is_ok = {
             let status = response.status();
             *status == hyper::StatusCode::Ok || *status == hyper::StatusCode::Created
         };
 
         if ! is_ok {
-            Err(Error::Status(response))
+            Err(Error::from(ErrorKind::Status(response)))
         } else {
             Ok(response)
         }
     }
 
     #[inline]
-    fn mkurl(&self, path: &str) -> Result<Url, Error> {
+    fn mkurl(&self, path: &str) -> Result<Url> {
         Ok(self.host.join(path)?)
     }
 
     #[inline]
-    fn raw_get(&self, path: &str) -> Result<roadrunner::Response, Error> {
+    fn raw_get(&self, path: &str) -> Result<roadrunner::Response> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::get(self.mkurl(path)?.as_str())
@@ -106,13 +130,13 @@ impl Client {
     }
 
     #[inline]
-    fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
+    fn get<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let x = self.raw_get(path)?;
         self.deserialize(x)
     }
 
     #[inline]
-    fn post_empty<T: DeserializeOwned>(&self, path: &str) -> Result<T, Error> {
+    fn post_empty<T: DeserializeOwned>(&self, path: &str) -> Result<T> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::post(self.mkurl(path)?.as_str())
@@ -123,7 +147,7 @@ impl Client {
     }
 
     #[inline]
-    fn post<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R, Error> {
+    fn post<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::post(self.mkurl(path)?.as_str())
@@ -135,7 +159,7 @@ impl Client {
     }
 
     #[inline]
-    fn put<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R, Error> {
+    fn put<T: Serialize, R: DeserializeOwned>(&self, path: &str, msg: T) -> Result<R> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::put(self.mkurl(path)?.as_str())
@@ -147,7 +171,7 @@ impl Client {
     }
 
     #[inline]
-    fn raw_delete(&self, path: &str) -> Result<roadrunner::Response, Error> {
+    fn raw_delete(&self, path: &str) -> Result<roadrunner::Response> {
         let mut core = tokio_core::reactor::Core::new().unwrap();
 
         let response = RestClient::get(self.mkurl(path)?.as_str())
@@ -157,11 +181,11 @@ impl Client {
         Client::assure_ok(response)
     }
 
-    pub fn list_policies(&self) -> Result<structs::PolicyReponse, Error> {
+    pub fn list_policies(&self) -> Result<structs::PolicyReponse> {
         self.get("/editor/policy/templates")
     }
 
-    pub fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse, Error> {
+    pub fn create_scan(&self, template_uuid: &str, settings: structs::ScanSettings) -> Result<structs::CreateScanResponse> {
         let request = structs::CreateScanRequest {
             uuid: template_uuid.into(),
             settings: settings,
@@ -170,7 +194,7 @@ impl Client {
         Ok(scan)
     }
 
-    pub fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse, Error> {
+    pub fn configure_scan(&self, scan_id: u64, template_uuid: Option<String>, settings: structs::ScanSettingsUpdate) -> Result<structs::UpdateScanResponse> {
         let request = structs::UpdateScanRequest {
             uuid: template_uuid,
             settings: settings,
@@ -180,44 +204,44 @@ impl Client {
         Ok(scan)
     }
 
-    pub fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<(), Error> {
+    pub fn delete_history(&self, scan_id: u64, history_id: u64) -> Result<()> {
         self.raw_delete(&format!("/scans/{}/history/{}", scan_id, history_id))?;
         Ok(())
     }
 
-    pub fn delete_scan(&self, scan_id: u64) -> Result<(), Error> {
+    pub fn delete_scan(&self, scan_id: u64) -> Result<()> {
         self.raw_delete(&format!("/scans/{}", scan_id))?;
         Ok(())
     }
 
-    pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse, Error> {
+    pub fn launch_scan(&self, id: u64) -> Result<structs::ScanLaunchResponse> {
         let mut launch: structs::ScanLaunchResponse = self.post_empty(&format!("/scans/{}/launch", id))?;
 
         launch.scan_id = Some(id);
         Ok(launch)
     }
 
-    pub fn stop_scan(&self, id: u64) -> Result<(), Error> {
+    pub fn stop_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/stop", id))
     }
 
-    pub fn pause_scan(&self, id: u64) -> Result<(), Error> {
+    pub fn pause_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/pause", id))
     }
 
-    pub fn resume_scan(&self, id: u64) -> Result<(), Error> {
+    pub fn resume_scan(&self, id: u64) -> Result<()> {
         self.post_empty(&format!("/scans/{}/resume", id))
     }
 
-    pub fn scan_details(&self, id: u64) -> Result<structs::ScanDetails, Error> {
+    pub fn scan_details(&self, id: u64) -> Result<structs::ScanDetails> {
         self.get(&format!("/scans/{}", id))
     }
 
-    pub fn list_scans(&self) -> Result<structs::ScanListResponse, Error> {
+    pub fn list_scans(&self) -> Result<structs::ScanListResponse> {
         self.get("/scans")
     }
 
-    pub fn list_scan_folder(&self, id: u64) -> Result<structs::ScanListResponse, Error> {
+    pub fn list_scan_folder(&self, id: u64) -> Result<structs::ScanListResponse> {
         // TODO: use ?folder_id=
         let response = self.list_scans()?;
 
@@ -235,7 +259,7 @@ impl Client {
         })
     }
 
-    pub fn export_scan(&self, scan_id: u64) -> Result<structs::ExportToken, Error> {
+    pub fn export_scan(&self, scan_id: u64) -> Result<structs::ExportToken> {
         let mut x = HashMap::new();
         x.insert("format", "nessus");
 
@@ -244,18 +268,18 @@ impl Client {
         Ok(token)
     }
 
-    pub fn export_status(&self, scan_id: u64, file_id: u64) -> Result<structs::ExportStatus, Error> {
+    pub fn export_status(&self, scan_id: u64, file_id: u64) -> Result<structs::ExportStatus> {
         self.get(&format!("/scans/{}/export/{}/status", scan_id, file_id))
     }
 
-    pub fn download_export_raw(&self, scan_id: u64, file_id: u64) -> Result<String, Error> {
+    pub fn download_export_raw(&self, scan_id: u64, file_id: u64) -> Result<String> {
         let response = self.raw_get(&format!("/scans/{}/export/{}/download", scan_id, file_id))?;
         let content = response.content();
         let string = content.as_ref_string().to_owned();
         Ok(string)
     }
 
-    pub fn download_export(&self, scan_id: u64, file_id: u64) -> Result<parser::NessusClientDatav2, Error> {
+    pub fn download_export(&self, scan_id: u64, file_id: u64) -> Result<parser::NessusClientDatav2> {
         let response = self.download_export_raw(scan_id, file_id)?;
         let report = parser::parse(response)?;
         Ok(report)
@@ -263,9 +287,9 @@ impl Client {
 }
 
 pub trait Waitable {
-    fn is_pending(&self, client: &Client) -> Result<bool, Error>;
+    fn is_pending(&self, client: &Client) -> Result<bool>;
 
-    fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<(), Error> {
+    fn wait(&self, client: &Client, interval: Duration, mut max_attempts: Option<u64>) -> Result<()> {
         loop {
             if ! self.is_pending(&client)? {
                 return Ok(());
@@ -282,7 +306,7 @@ pub trait Waitable {
             sleep(interval);
         }
 
-        return Err(Error::WaitTimeout);
+        return Err(Error::from(ErrorKind::WaitTimeout));
     }
 }
 

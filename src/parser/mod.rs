@@ -13,20 +13,21 @@ pub struct NessusClientDatav2 {
     pub policy: policy::Policy,
 }
 
-/// A set of errors that can occur
-#[derive(Debug)]
-pub enum Error {
-    Xml(serde_xml_rs::Error),
-}
 
-impl From<serde_xml_rs::Error> for Error {
-    fn from(err: serde_xml_rs::Error) -> Error {
-        Error::Xml(err)
+mod errors {
+    use serde_xml_rs;
+
+    error_chain! {
+        foreign_links {
+            Xml(serde_xml_rs::Error);
+        }
     }
 }
+pub use self::errors::*;
+
 
 /// Parse Nessus Reports
-pub fn parse<I: Into<String>>(buffer: I) -> Result<NessusClientDatav2, Error> {
+pub fn parse<I: Into<String>>(buffer: I) -> Result<NessusClientDatav2> {
     let report = serde_xml_rs::deserialize(buffer.into().as_bytes())?;
     Ok(report)
 }
