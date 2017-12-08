@@ -5,7 +5,7 @@ pub mod report;
 pub mod policy;
 
 /// Parsed nessus report
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct NessusClientDatav2 {
     #[serde(rename="Report")]
     pub report: report::Report,
